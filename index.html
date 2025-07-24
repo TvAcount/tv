@@ -1,54 +1,78 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Generador Enlace Encriptado</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Generador de enlace seguro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 2rem;
+      background: #121212;
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 1rem;
     }
-    input, textarea {
-      width: 100%;
-      padding: 0.7rem;
-      margin-top: 1rem;
+    input, button {
       font-size: 1rem;
+      padding: 0.6rem 1rem;
       border-radius: 6px;
       border: none;
+      outline: none;
+    }
+    input {
+      width: 300px;
+      margin-bottom: 1rem;
     }
     button {
-      background: #00bcd4;
-      color: white;
-      padding: 0.8rem 1.5rem;
-      border: none;
-      margin-top: 1rem;
+      background-color: #00bcd4;
+      color: black;
       cursor: pointer;
-      font-size: 1rem;
-      border-radius: 5px;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #33d6f7;
+    }
+    #result {
+      margin-top: 1rem;
+      word-break: break-all;
+      max-width: 90vw;
+      background: #222;
+      padding: 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <h2>🎬 Generador de Enlace Encriptado</h2>
-  <label>URL del Video (.mp4 o .m3u8):</label>
-  <input type="text" id="videoUrl" placeholder="https://..." />
 
-  <button onclick="generar()">Generar Enlace</button>
+<h1>Generador de enlace seguro</h1>
+<input id="inputUrl" type="text" placeholder="Pega aquí la URL del video (.mp4 o .m3u8)" />
+<button id="generateBtn">Generar enlace</button>
 
-  <label>Enlace desencriptado:</label>
-  <textarea id="output" rows="3" readonly></textarea>
+<div id="result" aria-live="polite"></div>
 
-  <script>
-    function generar() {
-      var url = document.getElementById('videoUrl').value.trim();
-      if (!url) return alert('Por favor ingresa una URL válida');
-      var encoded = btoa(url);
-      var finalUrl = 'desencriptador.html?data=' + encodeURIComponent(encoded);
-      document.getElementById('output').value = finalUrl;
+<script>
+  document.getElementById('generateBtn').addEventListener('click', function () {
+    var url = document.getElementById('inputUrl').value.trim();
+    if (!url) {
+      alert('Por favor, ingresa una URL válida.');
+      return;
     }
-  </script>
+    try {
+      var encoded = btoa(url);
+      // Cambia 'desencriptador.html' por la ruta correcta donde tengas el archivo
+      var link = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + 'desencriptador.html?data=' + encodeURIComponent(encoded);
+      document.getElementById('result').textContent = link;
+    } catch (e) {
+      alert('Error al codificar la URL.');
+    }
+  });
+</script>
+
 </body>
 </html>
