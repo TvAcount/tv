@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador Enlace Encriptado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 2rem;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 1rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      background: #00bcd4;
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      margin-top: 1rem;
+      cursor: pointer;
+      font-size: 1rem;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎬 Generador de Enlace Encriptado</h2>
+  <label>URL del Video (.mp4 o .m3u8):</label>
+  <input type="text" id="videoUrl" placeholder="https://..." />
+
+  <button onclick="generar()">Generar Enlace</button>
+
+  <label>Enlace desencriptado:</label>
+  <textarea id="output" rows="3" readonly></textarea>
+
+  <script>
+    function generar() {
+      var url = document.getElementById('videoUrl').value.trim();
+      if (!url) return alert('Por favor ingresa una URL válida');
+      var encoded = btoa(url);
+      var finalUrl = 'desencriptador.html?data=' + encodeURIComponent(encoded);
+      document.getElementById('output').value = finalUrl;
+    }
+  </script>
+</body>
+</html>
