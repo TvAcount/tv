@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reproductor Seguro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: black;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    #videoPlayer {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      background: black;
+    }
+    .controls-wrapper {
+      position: fixed;
+      bottom: 3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(0,0,0,0.5);
+      padding: 0.7rem 2rem;
+      border-radius: 50px;
+      transition: none;
+      z-index: 10;
+      user-select: none;
+      width: 90vw;
+      max-width: 600px;
+    }
+    .controls-wrapper.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      margin-bottom: 0.5rem;
+    }
+    button.control-btn {
+      background: rgba(0,0,0,0.7);
+      border: none;
+      color: white;
+      font-size: 2.2rem;
+      padding: 0.5rem 1rem;
+      border-radius: 50%;
+      cursor: pointer;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 3.8rem;
+      height: 3.8rem;
+      transition: none;
+    }
+    button.control-btn:focus {
+      background-color: #00bcd4;
+      transform: scale(1.2);
+    }
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+    }
+    #progressBar {
+      flex-grow: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: #444;
+      cursor: pointer;
+    }
+    #progressBar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #00bcd4;
+      border-radius: 50%;
+      cursor: pointer;
+      margin-top: -4px;
+      transition: none;
+    }
+    #progressBar::-webkit-slider-thumb:hover {
+      background-color: #33d6f7;
+    }
+    #progressBar:focus::-webkit-slider-thumb {
+      background-color: #00bcd4;
+      box-shadow: 0 0 8px #00bcd4;
+    }
+    .time {
+      color: #eee;
+      font-size: 1rem;
+      min-width: 60px;
+      text-align: center;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<video id="videoPlayer" tabindex="1" preload="auto"></video>
+
+<div class="controls-wrapper" id="controlsWrapper">
+  <div class="controls">
+    <button class="control-btn" id="backward" aria-label="Retroceder 10 segundos" tabindex="2" title="Retroceder 10s">
+      <i class="fas fa-backward"></i>
+    </button>
+    <button class="control-btn" id="playPause" aria-label="Reproducir/Pausar" tabindex="3" title="Play/Pause">
+      <i class="fas fa-play"></i>
+    </button>
+    <button class="control-btn" id="forward" aria-label="Avanzar 10 segundos" tabindex="4" title="Avanzar 10s">
+      <i class="fas fa-forward"></i>
+    </button>
+    <button class="control-btn" id="toggleControls" aria-label="Mostrar/Ocultar controles" tabindex="5" title="Ocultar controles">
+      <i class="fas fa-eye-slash"></i>
+    </button>
+  </div>
+  <div class="progress-container">
+    <div class="time" id="currentTime">0:00</div>
+    <input type="range" id="progressBar" min="0" max="100" value="0" step="0.1" aria-label="Barra de progreso" tabindex="-1" style="pointer-events: none;" />
+    <div class="time" id="duration">0:00</div>
+  </div>
+</div>
+
+<!-- Font Awesome -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+<!-- hls.js para compatibilidad .m3u8 -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+  // Obtener el parámetro `data` y decodificarlo
+  function obtenerUrlDesencriptada() {
+    var params = new URLSearchParams(window.location.search);
+    var base64 = params.get("data");
+    if (!base64) return null;
+    try {
+      return atob(base64);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  var videoSrc = obtenerUrlDesencriptada();
+  if (!videoSrc) {
+    alert("URL no válida");
+    throw new Error("No se proporcionó una URL válida");
+  }
+
+  var video = document.getElementById('videoPlayer');
+
+  function loadVideo(src) {
+    if (src.endsWith(".m3u8")) {
+      if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = src;
+        video.addEventListener('loadedmetadata', function () {
+          video.play();
+        });
+      } else {
+        alert("Este navegador no soporta .m3u8");
+      }
+    } else {
+      video.src = src;
+      video.addEventListener('loadedmetadata', function () {
+        video.play();
+      });
+    }
+  }
+
+  loadVideo(videoSrc);
+
+  const controlsWrapper = document.getElementById('controlsWrapper');
+  const playPauseBtn = document.getElementById('playPause');
+  const backwardBtn = document.getElementById('backward');
+  const forwardBtn = document.getElementById('forward');
+  const toggleControlsBtn = document.getElementById('toggleControls');
+  const progressBar = document.getElementById('progressBar');
+  const currentTimeEl = document.getElementById('currentTime');
+  const durationEl = document.getElementById('duration');
+
+  var controlsVisible = true;
+  var lastFocusedElement = playPauseBtn;
+  var userIsSeeking = false;
+
+  function formatTime(seconds) {
+    var h = Math.floor(seconds / 3600);
+    var m = Math.floor((seconds % 3600) / 60);
+    var s = Math.floor(seconds % 60);
+    return (h > 0 ? (h < 10 ? '0' + h : h) + ':' : '') +
+           (m < 10 ? '0' + m : m) + ':' +
+           (s < 10 ? '0' + s : s);
+  }
+
+  function updatePlayPauseIcon() {
+    if(video.paused) {
+      playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+      playPauseBtn.title = "Reproducir";
+    } else {
+      playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+      playPauseBtn.title = "Pausar";
+    }
+  }
+
+  playPauseBtn.addEventListener('click', () => {
+    if(video.paused) video.play(); else video.pause();
+    updatePlayPauseIcon();
+  });
+
+  backwardBtn.addEventListener('click', () => {
+    video.currentTime = Math.max(0, video.currentTime - 10);
+  });
+
+  forwardBtn.addEventListener('click', () => {
+    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+  });
+
+  toggleControlsBtn.addEventListener('click', () => {
+    if(controlsVisible) {
+      controlsWrapper.classList.add('hidden');
+      controlsVisible = false;
+    } else {
+      controlsWrapper.classList.remove('hidden');
+      controlsVisible = true;
+      lastFocusedElement.focus();
+    }
+  });
+
+  video.addEventListener('play', updatePlayPauseIcon);
+  video.addEventListener('pause', updatePlayPauseIcon);
+
+  video.addEventListener('loadedmetadata', () => {
+    durationEl.textContent = formatTime(video.duration);
+    progressBar.max = video.duration;
+  });
+
+  video.addEventListener('timeupdate', () => {
+    if(!userIsSeeking) {
+      progressBar.value = video.currentTime;
+      currentTimeEl.textContent = formatTime(video.currentTime);
+    }
+  });
+
+  progressBar.addEventListener('input', () => {
+    userIsSeeking = true;
+    currentTimeEl.textContent = formatTime(progressBar.value);
+  });
+
+  progressBar.addEventListener('change', () => {
+    video.currentTime = progressBar.value;
+    userIsSeeking = false;
+  });
+
+  const controlButtons = [backwardBtn, playPauseBtn, forwardBtn, toggleControlsBtn];
+
+  controlButtons.forEach(el => {
+    el.addEventListener('focus', () => {
+      lastFocusedElement = el;
+    });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if(!controlsVisible) {
+      if(e.key === 'Enter' || e.key === ' ') {
+        controlsWrapper.classList.remove('hidden');
+        controlsVisible = true;
+        lastFocusedElement.focus();
+        e.preventDefault();
+      }
+      return;
+    }
+
+    switch(e.key) {
+      case 'ArrowLeft':
+        if(document.activeElement === progressBar) {
+          progressBar.value = Math.max(0, progressBar.value - 5);
+          currentTimeEl.textContent = formatTime(progressBar.value);
+        } else {
+          focusPrevButton();
+        }
+        e.preventDefault();
+        break;
+      case 'ArrowRight':
+        if(document.activeElement === progressBar) {
+          progressBar.value = Math.min(progressBar.max, parseFloat(progressBar.value) + 5);
+          currentTimeEl.textContent = formatTime(progressBar.value);
+        } else {
+          focusNextButton();
+        }
+        e.preventDefault();
+        break;
+      case 'Enter':
+      case ' ':
+        if(document.activeElement === progressBar) {
+          video.currentTime = progressBar.value;
+        } else if(controlButtons.includes(document.activeElement)) {
+          document.activeElement.click();
+        }
+        e.preventDefault();
+        break;
+    }
+  });
+
+  function focusNextButton() {
+    let currentIndex = controlButtons.indexOf(document.activeElement);
+    let nextIndex = (currentIndex + 1) % controlButtons.length;
+    controlButtons[nextIndex].focus();
+  }
+
+  function focusPrevButton() {
+    let currentIndex = controlButtons.indexOf(document.activeElement);
+    let prevIndex = (currentIndex - 1 + controlButtons.length) % controlButtons.length;
+    controlButtons[prevIndex].focus();
+  }
+
+  window.onload = () => {
+    updatePlayPauseIcon();
+    playPauseBtn.focus();
+  };
+</script>
+
+</body>
+</html>
